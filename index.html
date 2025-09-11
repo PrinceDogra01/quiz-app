@@ -1,0 +1,119 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Cadet Quiz</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.4.0/dist/confetti.browser.min.js"></script>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+
+<div id="input-page" class="page">
+    <div class="form-container">
+        <h1 class="text-3xl font-bold mb-4">Get your first mission for free!</h1>
+        <p class="mb-6 text-base">Your brain is waiting for a challenge. Start your mission today.</p>
+        <div class="mb-4">
+            <label class="block mb-2 text-sm font-medium">Full Name</label>
+            <input type="text" id="playerName" placeholder="John Smith" />
+        </div>
+        <div class="mb-4">
+            <label class="block mb-2 text-sm font-medium">Gender</label>
+            <select id="playerGender" class="w-full p-2 rounded">
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+        <div class="mb-6">
+            <label class="block mb-2 text-sm font-medium">Age</label>
+            <input type="number" id="playerAge" placeholder="18" />
+        </div>
+        <button onclick="goToGreeting()" class="start-btn">Start mission</button>
+    </div>
+</div>
+
+<div id="greeting-page" class="page" style="display:none;">
+    <h2 id="greeting-text" class="text-3xl font-bold text-indigo-400 mb-4"></h2>
+    <p id="ai-message" class="text-xl leading-relaxed typing-effect"></p>
+    <button onclick="goToRules()" class="start-btn mt-4">Read Mission Rules</button>
+</div>
+
+<div id="rules-page" class="page" style="display:none;">
+    <h2 class="text-3xl font-bold text-indigo-400 mb-4">Mission Control Rules</h2>
+    <p>Success requires precision. Follow these rules to complete your mission:</p>
+    <ul class="rules-list text-gray-200">
+        <li>**Level 1 (Easy):** You must get at least **4 out of 6** questions correct to proceed.</li>
+        <li>**Level 2 (Medium):** You must get at least **7 out of 10** questions correct to proceed.</li>
+        <li>**Level 3 (Hard):** You must get at least **8 out of 12** questions correct to complete the final mission.</li>
+        <li>You will have **30 seconds** to answer each question. Good luck, Space Cadet.</li>
+    </ul>
+    <button onclick="startQuiz()" class="start-btn mt-6">🚀 Start Quiz</button>
+</div>
+
+<div id="category-page" class="page" style="display:none;">
+    <h2 class="text-3xl font-bold text-indigo-400 mb-4">Select Your Mission</h2>
+    <p>Choose your area of expertise, Space Cadet:</p>
+    <div class="flex flex-col gap-4 mt-6">
+        <button onclick="startCategoryQuiz('general')" class="quiz-btn">General Genius</button>
+        <button onclick="startCategoryQuiz('medical')" class="quiz-btn">Science Masters</button>
+        <button onclick="startCategoryQuiz('engineering')" class="quiz-btn">Engineer's Edge</button>
+        <button onclick="startCategoryQuiz('sports')" class ="quiz-btn">Sports Arena</button>
+    </div>
+    <div id="leaderboard">
+        <h2 style="font-weight:bold; font-size:18px; margin-bottom:10px;">🏆 Leaderboard</h2>
+        <ul id="leaderboard-list"></ul>
+    </div>
+</div>
+
+<div id="congrats-page" class="page" style="display:none;">
+    <h2 class="text-4xl font-bold text-indigo-400 mb-4">CONGRATULATIONS!</h2>
+    <p id="congrats-text" class="text-xl leading-relaxed"></p>
+    <div class="mt-8">
+        <button onclick="goToNextLevel()" class="start-btn">Next Mission</button>
+    </div>
+</div>
+
+<div id="quiz-page" class="page" style="display:none;">
+    <div id="game-container" class="quiz-container">
+        <h1 id="game-title" class="text-3xl font-bold mb-6 text-indigo-400">Mission Control</h1>
+        <div class="flex justify-between items-center text-lg font-medium text-gray-400 border-b border-gray-700 pb-4">
+            <span id="ai-assistant" class="flex items-center space-x-2">AI Assistant</span>
+            <span id="score-info">Score: 0</span>
+        </div>
+        
+        <div id="progress-bar-container">
+            <div id="progress-bar"></div>
+        </div>
+
+        <div id="timer" class="mb-4">30</div>
+        
+        <p id="question" class="text-2xl font-semibold text-center text-gray-200 leading-relaxed mt-6">
+            Loading first question...
+        </p>
+
+        <div id="answers" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6"></div>
+        
+        <button onclick="goBackToCategories()" class="start-btn mt-6">⬅ Back to Categories</button>
+    </div>
+</div>
+
+<div class="footer">&copy; Made By  Prince Kumar Dogra</div>
+
+<audio id="sfx-correct" src="https://assets.mixkit.co/sfx/preview/mixkit-sci-fi-confirmation-2415.mp3"></audio>
+<audio id="sfx-wrong" src="https://assets.mixkit.co/sfx/preview/mixkit-sci-fi-reject-2417.mp3"></audio>
+<audio id="sfx-tick" src="https://assets.mixkit.co/sfx/preview/mixkit-clock-ticking-short-1282.mp3"></audio>
+<audio id="sfx-timeup" src="https://assets.mixkit.co/sfx/preview/mixkit-system-break-276.mp3"></audio>
+
+<script src="script.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,238 @@
+body {
+    font-family: 'Orbitron', sans-serif;
+    margin:0; 
+    padding:0;
+    background: radial-gradient(circle, #0a0a2a, #000);
+    background-size: 200% 200%;
+    animation: stars-bg 60s linear infinite;
+    color: rgb(211, 218, 223);
+}
+
+@keyframes stars-bg { 
+    from { background-position: 0 0; } 
+    to { background-position: 100% 100%; } 
+}
+
+.page { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    min-height: 100vh; 
+    text-align: center; 
+    padding: 1rem; 
+    transition: all 0.5s ease; 
+}
+
+#input-page {
+    background-image: url('https://static.vecteezy.com/system/resources/thumbnails/049/102/483/small/hud-frame-element-technology-background-with-a-border-of-blue-neon-light-beams-on-black-mesh-texture-this-tech-border-ui-viewfinder-animation-is-full-hd-and-looping-free-video.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.form-container { 
+    background: rgba(99, 148, 194, 0.95); 
+    padding: 2.5rem; 
+    border-radius: 1rem; 
+    color: black; 
+    max-width: 500px; 
+    width: 100%; 
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+
+.form-container h1, .form-container p { 
+    color: black; 
+}
+
+.form-container input, .form-container select { 
+    width: 100%; 
+    padding: 0.5rem; 
+    border-radius: 0.5rem; 
+    border: 1px solid #ccc; 
+    background: #f0f0f0; 
+    font-family: 'Orbitron';
+}
+
+.form-container input:focus, .form-container select:focus { 
+    outline: 2px solid #4a90e2; 
+}
+
+.start-btn { 
+    padding: 0.75rem 2rem; 
+    border-radius: 2rem; 
+    background: linear-gradient(90deg, #4a90e2, #8e44ad); 
+    border: none; 
+    cursor: pointer; 
+    font-weight: 600; 
+    color: white; 
+    transition: all 0.3s ease; 
+    width: 100%; 
+    margin-top: 1rem;
+}
+
+.start-btn:hover { 
+    transform: scale(1.05); 
+}
+
+.quiz-container { 
+    background: rgba(20,20,60,0.85); 
+    border: 2px solid #4a90e2; 
+    border-radius: 2rem; 
+    padding: 2rem; 
+    width: 100%; 
+    max-width: 800px; 
+    box-shadow: 0 0 40px rgba(76,29,149,0.5);
+}
+
+.quiz-btn { 
+    background: #2d2d4d; 
+    border-radius: 1rem; 
+    padding: 0.75rem; 
+    margin: 0.5rem 0; 
+    transition: all 0.2s; 
+    cursor: pointer; 
+    width: 100%; /* Make category buttons full width */
+}
+
+.quiz-btn:hover { 
+    background: #4a90e2; 
+}
+
+#timer { 
+    font-size: 2.5rem; 
+    font-weight: bold; 
+    color: #4a90e2; 
+    margin-bottom: 1rem; 
+    transition: color 0.3s ease-in-out;
+}
+
+#timer.low-time { 
+    color: #e24a4a; 
+}
+
+.typing-effect { 
+    display: inline-block; 
+    overflow: hidden; 
+    white-space: nowrap; 
+    font-size: 1.2rem; 
+    border-right: .15em solid white; 
+    animation: typing 4s steps(40,end), blink-caret .75s step-end infinite;
+}
+
+@keyframes typing { 
+    from { width: 0 } 
+    to { width: 100% } 
+}
+
+@keyframes blink-caret { 
+    from, to { border-color: transparent } 
+    50% { border-color: white } 
+}
+
+.footer { 
+    position: absolute; 
+    bottom: 1rem; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    font-size: 0.8rem; 
+    color: #aaa; 
+}
+
+#progress-bar-container { 
+    width: 100%; 
+    background-color: #333; 
+    border-radius: 1rem; 
+    overflow: hidden; 
+    height: 1.5rem; 
+    margin-top: 1rem; 
+    border: 1px solid #4a90e2;
+}
+
+#progress-bar { 
+    height: 100%; 
+    width: 0%; 
+    background: linear-gradient(90deg, #4a90e2, #8e44ad); 
+    transition: width 0.5s ease-in-out; 
+}
+
+button:disabled { 
+    opacity: 0.6; 
+    cursor: not-allowed; 
+}
+
+.rules-list { 
+    text-align: left; 
+    max-width: 600px; 
+    margin: 2rem auto 0;
+}
+
+.rules-list li { 
+    margin-bottom: 1rem; 
+}
+
+#leaderboard {
+    position: fixed; 
+    top: 20px; 
+    right: 20px; 
+    width: 260px; 
+    background: white; 
+    color: black; 
+    border: 2px solid #333; 
+    border-radius: 10px; 
+    padding: 15px; 
+    box-shadow: 0px 4px 8px rgba(0,0,0,0.2); 
+    z-index: 999;
+}
+
+#leaderboard-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#leaderboard-list li {
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
+}
+
+/* ===== MOBILE-FRIENDLY STYLES ===== */
+@media (max-width: 768px) {
+    #leaderboard {
+        position: relative;
+        width: 100%;
+        max-width: 400px;
+        right: auto;
+        top: auto;
+        margin-top: 2rem;
+    }
+
+    .footer {
+        position: relative;
+        bottom: auto;
+        padding: 2rem 0;
+    }
+
+    .form-container h1, #greeting-page h2, #rules-page h2, #category-page h2, #congrats-page h2 {
+        font-size: 1.8rem;
+    }
+
+    #question {
+        font-size: 1.2rem;
+    }
+
+    .form-container, .quiz-container {
+        padding: 1.5rem;
+    }
+
+    .typing-effect {
+        white-space: normal;
+        border-right: none;
+        animation: none;
+        display: block;
+    }
+    
+    #ai-message {
+        display: block !important;
+    }
+}
