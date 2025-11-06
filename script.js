@@ -1,314 +1,153 @@
-// ----- Global Variables -----
-const apiLinks = {
-    general: {
-        easy: "https://opentdb.com/api.php?amount=6&category=9&difficulty=easy&type=multiple",
-        medium: "https://opentdb.com/api.php?amount=10&category=9&difficulty=medium&type=multiple",
-        hard: "https://opentdb.com/api.php?amount=12&category=9&difficulty=hard&type=multiple"
-    },
-    engineering: {
-        easy: "https://opentdb.com/api.php?amount=6&category=18&difficulty=easy&type=multiple",
-        medium: "https://opentdb.com/api.php?amount=10&category=18&difficulty=medium&type=multiple",
-        hard: "https://opentdb.com/api.php?amount=12&category=18&difficulty=hard&type=multiple"
-    },
-    medical: {
-        easy: "https://opentdb.com/api.php?amount=6&category=17&difficulty=easy&type=multiple",
-        medium: "https://opentdb.com/api.php?amount=10&category=17&difficulty=medium&type=multiple",
-        hard: "https://opentdb.com/api.php?amount=12&category=17&difficulty=hard&type=multiple"
-    },
-    sports: {
-        easy: "https://opentdb.com/api.php?amount=6&category=21&difficulty=easy&type=multiple",
-        medium: "https://opentdb.com/api.php?amount=10&category=21&difficulty=medium&type=multiple",
-        hard: "https://opentdb.com/api.php?amount=12&category=21&difficulty=hard&type=multiple"
-    }
-};
+/*
+  Space Cadet Quiz – Interactions & Effects
+  - Canvas starfield renderer (parallax layers)
+  - Form validation + launch animation
+  - Optional background ambience toggle (graceful fallback)
+*/
 
-const roundQuestionsCount = [6, 10, 12];
-const passingScores = [4, 7, 8];
-const triviaDifficulties = ["easy", "medium", "hard"];
-const TIMER_DURATION_PER_QUESTION = 30;
+(function () {
+  "use strict";
 
-let currentRound = 0, currentQuestionIndex = 0, correctAnswersInRound = 0, totalScore = 0, currentQuestions = [], currentCategory = '', playerName = '';
-let timerInterval, timeLeft = TIMER_DURATION_PER_QUESTION;
+  const canvas = document.getElementById("starfield");
+  const ctx = canvas.getContext("2d", { alpha: true });
+  const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
 
+  let stars = [];
+  let width = 0;
+  let height = 0;
+  const layers = [
+    { speed: 0.02, countFactor: 0.25, size: [0.6, 1.1], color: "rgba(255,255,255,0.75)" },
+    { speed: 0.05, countFactor: 0.45, size: [0.8, 1.6], color: "rgba(185,240,255,0.85)" },
+    { speed: 0.09, countFactor: 0.30, size: [1.0, 2.2], color: "rgba(94,231,255,0.95)" }
+  ];
 
-// ----- Page Navigation & Setup -----
-function goToGreeting() {
-    playerName = document.getElementById('playerName').value.trim();
-    const age = document.getElementById('playerAge').value.trim();
-    const gender = document.getElementById('playerGender').value;
+  function resizeCanvas() {
+    width = canvas.clientWidth;
+    height = canvas.clientHeight;
+    canvas.width = Math.floor(width * dpr);
+    canvas.height = Math.floor(height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    generateStars();
+  }
 
-    if (!playerName || !age || !gender) {
-        alert("Please fill all fields!");
-        return;
-    }
+  function rand(min, max) {
+    return Math.random() * (max - min) + min;
+  }
 
-    document.getElementById('greeting-text').textContent = `Welcome, ${playerName}!`;
-    document.getElementById('input-page').style.display = 'none';
-    document.getElementById('greeting-page').style.display = 'flex';
-    typeWriter();
-}
-
-function goToRules() {
-    document.getElementById('greeting-page').style.display = 'none';
-    document.getElementById('rules-page').style.display = 'flex';
-}
-
-function startQuiz() {
-    document.getElementById('rules-page').style.display = 'none';
-    document.getElementById('category-page').style.display = 'flex';
-}
-
-function goToNextLevel() {
-    document.getElementById('congrats-page').style.display = 'none';
-    document.getElementById('quiz-page').style.display = 'flex';
-    loadRound();
-}
-
-function goBackToCategories() {
-    clearInterval(timerInterval);
-    document.getElementById('quiz-page').style.display = 'none';
-    document.getElementById('congrats-page').style.display = 'none';
-    document.getElementById('category-page').style.display = 'flex';
-    currentRound = 0;
-    totalScore = 0;
-}
-
-// Typing Effect
-function typeWriter() {
-    const aiMessageEl = document.getElementById("ai-message");
-    const name = document.getElementById('playerName').value.trim();
-    const greetingText = `Hi My name is Prince Dogra and I welcome you to this Mission Control. Are you excited to complete this mission, ${name}?`;
-    aiMessageEl.innerHTML = "";
-    let i = 0;
-
-    function type() {
-        if (i < greetingText.length) {
-            aiMessageEl.innerHTML += greetingText.charAt(i);
-            i++;
-            setTimeout(type, 30);
-        }
-    }
-    type();
-}
-
-
-// ----- Quiz Logic -----
-function startCategoryQuiz(category) {
-    currentCategory = category;
-    document.getElementById('category-page').style.display = 'none';
-    document.getElementById('quiz-page').style.display = 'flex';
-    document.getElementById('game-title').textContent = `${category.charAt(0).toUpperCase() + category.slice(1)} Mission`;
-    startMission();
-}
-
-function startMission() {
-    currentRound = 0;
-    currentQuestionIndex = 0;
-    correctAnswersInRound = 0;
-    totalScore = 0;
-    document.getElementById('score-info').textContent = `Score: 0`; // Reset score display
-    loadRound();
-}
-
-async function loadRound() {
-    clearInterval(timerInterval);
-    correctAnswersInRound = 0;
-    currentQuestionIndex = 0;
-    const difficulty = triviaDifficulties[currentRound];
-    const url = apiLinks[currentCategory][difficulty];
-
-    try {
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.response_code === 0 && data.results.length > 0) {
-            currentQuestions = data.results;
-            loadQuestion();
-        } else {
-            alert("Could not fetch mission data. Please try another category.");
-            goBackToCategories();
-        }
-    } catch (error) {
-        alert("Network error. Could not connect to mission control.");
-        goBackToCategories();
-    }
-}
-
-function loadQuestion() {
-    clearInterval(timerInterval);
-    timeLeft = TIMER_DURATION_PER_QUESTION;
-    const timerEl = document.getElementById('timer');
-    timerEl.textContent = timeLeft;
-    timerEl.classList.remove('low-time');
-    updateProgressBar();
-
-    if (currentQuestionIndex >= currentQuestions.length) {
-        endRound();
-        return;
-    }
-
-    const questionEl = document.getElementById('question');
-    const answersEl = document.getElementById('answers');
-    answersEl.innerHTML = "";
-
-    const q = currentQuestions[currentQuestionIndex];
-    questionEl.textContent = `Mission ${currentRound + 1} Q${currentQuestionIndex + 1}: ${decodeHtml(q.question)}`;
-    const allAnswers = [...q.incorrect_answers, q.correct_answer];
-    shuffleArray(allAnswers);
-
-    allAnswers.forEach(ans => {
-        const btn = document.createElement('button');
-        btn.textContent = decodeHtml(ans);
-        btn.className = 'quiz-btn';
-        btn.onclick = () => checkAnswer(ans, q.correct_answer, btn);
-        answersEl.appendChild(btn);
-    });
-
-    startQuestionTimer();
-}
-
-function startQuestionTimer() {
-    const timerEl = document.getElementById('timer');
-    const sfxTick = document.getElementById('sfx-tick');
-    const sfxTimeUp = document.getElementById('sfx-timeup');
-
-    timerInterval = setInterval(() => {
-        timeLeft--;
-        timerEl.textContent = timeLeft;
-
-        if (timeLeft <= 10 && timeLeft > 0) {
-            timerEl.classList.add('low-time');
-            sfxTick.play();
-        }
-
-        if (timeLeft <= 0) {
-            clearInterval(timerInterval);
-            sfxTimeUp.play();
-            const buttons = document.querySelectorAll('#answers button');
-            buttons.forEach(b => {
-                b.disabled = true;
-                if (b.textContent === decodeHtml(currentQuestions[currentQuestionIndex].correct_answer)) {
-                    b.style.backgroundColor = 'green';
-                }
-            });
-            setTimeout(() => {
-                currentQuestionIndex++;
-                loadQuestion();
-            }, 2000);
-        }
-    }, 1000);
-}
-
-function checkAnswer(selected, correct, btn) {
-    clearInterval(timerInterval);
-    const timerEl = document.getElementById('timer');
-    timerEl.classList.remove('low-time');
-
-    const buttons = document.querySelectorAll('#answers button');
-    buttons.forEach(b => b.disabled = true);
-
-    if (selected === correct) {
-        document.getElementById('sfx-correct').play();
-        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-        totalScore++;
-        correctAnswersInRound++;
-        btn.style.backgroundColor = 'green';
-    } else {
-        document.getElementById('sfx-wrong').play();
-        btn.style.backgroundColor = 'red';
-        buttons.forEach(b => {
-            if (b.textContent === decodeHtml(correct)) {
-                b.style.backgroundColor = 'green';
-            }
+  function generateStars() {
+    const area = width * height;
+    stars = [];
+    layers.forEach((layer, i) => {
+      const count = Math.max(40, Math.floor(area / 9000 * layer.countFactor));
+      for (let s = 0; s < count; s++) {
+        stars.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          z: i, // layer index
+          r: rand(layer.size[0], layer.size[1]),
+          twinkle: Math.random() * Math.PI * 2,
         });
-    }
-    document.getElementById('score-info').textContent = `Score: ${totalScore}`;
-    setTimeout(() => {
-        currentQuestionIndex++;
-        loadQuestion();
-    }, 2000);
-}
-
-function endRound() {
-    clearInterval(timerInterval);
-
-    if (correctAnswersInRound >= passingScores[currentRound]) {
-        currentRound++; // Move to the next round index
-
-        if (currentRound < roundQuestionsCount.length) {
-            // Player passed and there is a next level
-            document.getElementById('quiz-page').style.display = 'none';
-            document.getElementById('congrats-page').style.display = 'flex';
-            document.getElementById('congrats-text').textContent = `You have successfully completed Mission ${currentRound}! Now preparing for your next mission.`;
-        } else {
-            // Player passed the FINAL round and won the game
-            saveScoreToLeaderboard();
-            alert(`Congratulations, ${playerName}! All missions complete! Your final score is: ${totalScore}`);
-            location.reload();
-        }
-    } else {
-        // Player failed the current round
-        saveScoreToLeaderboard(); // Save score even on failure
-        alert(`Mission Failed! You only scored ${correctAnswersInRound}/${roundQuestionsCount[currentRound]}. Try again, Space Cadet.`);
-        location.reload(); // Reload to start over
-    }
-}
-
-
-// ----- Helper & Utility Functions -----
-function updateProgressBar() {
-    const progressBar = document.getElementById('progress-bar');
-    const totalQuestions = roundQuestionsCount[currentRound];
-    const progressPercentage = (currentQuestionIndex / totalQuestions) * 100;
-    progressBar.style.width = `${progressPercentage}%`;
-}
-
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-}
-
-function decodeHtml(html) {
-    const txt = document.createElement("textarea");
-    txt.innerHTML = html;
-    return txt.value;
-}
-
-
-// ----- Leaderboard Logic -----
-function renderLeaderboard() {
-    const board = JSON.parse(localStorage.getItem("leaderboard")) || [];
-    const listEl = document.getElementById("leaderboard-list");
-    
-    board.sort((a, b) => b.score - a.score);
-    listEl.innerHTML = "";
-
-    board.slice(0, 5).forEach(player => {
-        const li = document.createElement("li");
-        li.textContent = `${player.name} - ${player.score} pts`;
-        listEl.appendChild(li);
+      }
     });
-}
+  }
 
-function saveScoreToLeaderboard() {
-    let board = JSON.parse(localStorage.getItem("leaderboard")) || [];
-    const existingPlayerIndex = board.findIndex(player => player.name === playerName);
+  let lastTime = 0;
+  function tick(ts) {
+    const dt = Math.min(32, ts - lastTime) || 16; // clamp delta
+    lastTime = ts;
 
-    if (existingPlayerIndex !== -1) {
-        if (totalScore > board[existingPlayerIndex].score) {
-            board[existingPlayerIndex].score = totalScore;
-        }
-    } else {
-        const newScore = {
-            name: playerName,
-            score: totalScore,
-        };
-        board.push(newScore);
+    ctx.clearRect(0, 0, width, height);
+
+    // draw stars by layer
+    for (let i = 0; i < stars.length; i++) {
+      const s = stars[i];
+      const layer = layers[s.z];
+      // motion downward (towards bottom-right a bit)
+      s.y += layer.speed * dt * 0.6;
+      s.x += layer.speed * dt * 0.15;
+      if (s.y > height + 2) s.y = -2;
+      if (s.x > width + 2) s.x = -2;
+
+      const tw = (Math.sin(s.twinkle + ts * 0.002) + 1) * 0.5; // 0..1
+      const baseAlpha = 0.4 + 0.6 * tw;
+
+      ctx.beginPath();
+      ctx.fillStyle = layer.color.replace(/0\.[0-9]+\)/, baseAlpha.toFixed(2) + ")");
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fill();
     }
-    localStorage.setItem("leaderboard", JSON.stringify(board));
-    renderLeaderboard();
-}
 
-// Initial call to render the leaderboard when the page loads
-document.addEventListener('DOMContentLoaded', renderLeaderboard);
+    requestAnimationFrame(tick);
+  }
+
+  // Resize handling
+  const ro = new ResizeObserver(resizeCanvas);
+  ro.observe(canvas);
+  resizeCanvas();
+  requestAnimationFrame(tick);
+
+  // Form interactions
+  const form = document.getElementById("loginForm");
+  const startBtn = document.getElementById("startBtn");
+
+  function validateForm() {
+    if (!form) return false;
+    const name = form.elements.namedItem("name");
+    const email = form.elements.namedItem("email");
+    const age = form.elements.namedItem("age");
+    const gender = form.elements.namedItem("gender");
+    const nameOk = name && name.value && String(name.value).trim().length >= 2;
+    const emailVal = email && String(email.value).trim();
+    const emailOk = !!(emailVal && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal));
+    const ageVal = age && Number(age.value);
+    const ageOk = Number.isFinite(ageVal) && ageVal >= 1 && ageVal <= 120;
+    const genderOk = gender && gender.value && gender.value !== "";
+    return !!(nameOk && emailOk && ageOk && genderOk);
+  }
+
+  function addTempError(el) {
+    if (!el) return;
+    el.style.borderColor = "rgba(255, 107, 107, 0.75)";
+    el.style.boxShadow = "0 0 0 4px rgba(255, 107, 107, 0.15)";
+    setTimeout(() => {
+      el.style.borderColor = "";
+      el.style.boxShadow = "";
+    }, 800);
+  }
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!validateForm()) {
+      addTempError(form.querySelector("#playerName"));
+      addTempError(form.querySelector("#playerEmail"));
+      addTempError(form.querySelector("#playerAge"));
+      addTempError(form.querySelector("#playerGender"));
+      return;
+    }
+
+    // Launch sequence
+    document.body.classList.add("launching");
+    startBtn.disabled = true;
+
+    // small delay, then warp pulse
+    setTimeout(() => {
+      document.body.classList.add("warp");
+    }, 400);
+
+    // After animation, hand off to quiz flow
+    setTimeout(() => {
+      try {
+        if (typeof goToGreeting === "function") {
+          goToGreeting();
+        }
+      } finally {
+        document.body.classList.remove("warp", "launching");
+        startBtn.disabled = false;
+      }
+    }, 1200);
+  });
+
+  // (Music controls removed per user request)
+})();
+
+
